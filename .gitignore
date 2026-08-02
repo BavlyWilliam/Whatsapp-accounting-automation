@@ -1,0 +1,25 @@
+# Environment
+.env
+
+# Python virtual environment
+.venv/
+venv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Browser profiles
+firefox_profile/
+firefox_profile_test/
+firefox_profile_test_business/
+
+# Secrets
+Credentials.json
+token.json
+
+# Logs
+*.log
+
+# VS Code settings
+.vscode/

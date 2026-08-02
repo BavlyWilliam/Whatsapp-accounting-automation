@@ -1,0 +1,9 @@
+{
+    "client_name": "test_business",
+    "sheet_name": "Business Purchases Log",
+    "worksheet_name": "Raw Data",
+    "group_name": "Business purchase",
+    "profile_folder": "./firefox_profile_test_business",
+    "state_file": "./state_test_business.json",
+    "log_file": "./logs_test_business.log"
+}
