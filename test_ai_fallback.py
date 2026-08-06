@@ -9,8 +9,8 @@ class FakeSheet:
 fake_sheet = FakeSheet()
 
 process_message({"sender": "Test User", "timestamp": "1:00 pm, 01/08/2026",
-                "text": "Item: Paper\nQuantity: 6 hrs\nAmount: 450"}, fake_sheet)
+                "text": "Itm: Cable\nQiantity: 3\nAmout: 90\nVendor: ElectroShop"}, fake_sheet)
 process_message({"sender": "Test User", "timestamp": "1:01 pm, 01/08/2026",
-                "text": "bought some printer paper today for 450, got 5 of them"}, fake_sheet)
-process_message({"sender": "Test User",
-                "timestamp": "1:02 pm, 01/08/2026", "text": "pptc"}, fake_sheet)
+                "text": "الصنف: كابل\nالكمية: 3\nالسعر: 90"}, fake_sheet)
+process_message({"sender": "Test User", "timestamp": "1:02 pm, 01/08/2026",
+                "text": "bought 2 items of paper for 450 from Office World"}, fake_sheet)

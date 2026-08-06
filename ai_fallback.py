@@ -23,7 +23,7 @@ Message: "{raw_text}"
 
     try:
         response = client.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-3.5-flash-lite",
             contents=prompt
         )
         raw_output = response.text.strip()
@@ -32,4 +32,5 @@ Message: "{raw_text}"
         data = json.loads(raw_output)
         return data
     except Exception:
+
         return None
