@@ -25,9 +25,12 @@ def validate(data):
     if amount <= 0:
         return False, f"Amount must be greater than 0, got: {amount}"
 
+    vendor = data.get("vendor", "").strip()
+
     clean_data = {
         "item": item,
         "quantity": quantity,
-        "amount": amount
+        "amount": amount,
+        "vendor": vendor
     }
     return True, clean_data
