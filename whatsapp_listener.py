@@ -1,6 +1,7 @@
 from selenium import webdriver
 from selenium.webdriver.firefox.service import Service
 from selenium.webdriver.common.by import By
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.firefox import GeckoDriverManager
@@ -42,24 +43,40 @@ def open_group(driver, group_name):
     )
     chat_entry.click()
 
-    header = wait.until(
-        EC.presence_of_element_located((By.CSS_SELECTOR, "header"))
-    )
-    time.sleep(1)
-
-    if group_name not in header.text:
+    try:
+        header_title = wait.until(
+            EC.presence_of_element_located(
+                (By.CSS_SELECTOR,
+                 'span[data-testid="conversation-info-header-chat-title"]')
+            )
+        )
+        if header_title.text.strip() != group_name:
+            raise RuntimeError(
+                f"SAFETY CHECK FAILED: Expected '{group_name}' but header "
+                f"shows '{header_title.text}'. Aborting."
+            )
+    except TimeoutException:
         raise RuntimeError(
-            f"SAFETY CHECK FAILED: Expected to open '{group_name}' but "
-            f"header shows: '{header.text}'. Aborting."
+            f"SAFETY CHECK FAILED: Chat header never appeared after opening "
+            f"'{group_name}'. Aborting."
         )
 
 
 def read_messages(driver, group_name):
-    header = driver.find_element(By.CSS_SELECTOR, "header")
-    if group_name not in header.text:
+    try:
+        header_title = driver.find_element(
+            By.CSS_SELECTOR,
+            'span[data-testid="conversation-info-header-chat-title"]'
+        )
+        if header_title.text.strip() != group_name:
+            raise RuntimeError(
+                f"SAFETY CHECK FAILED during polling: expected "
+                f"'{group_name}', found '{header_title.text}'. Stopping."
+            )
+    except NoSuchElementException:
         raise RuntimeError(
-            f"SAFETY CHECK FAILED during polling: expected '{group_name}', "
-            f"header shows '{header.text}'. Stopping."
+            "SAFETY CHECK FAILED during polling: chat header not found at "
+            "all. Stopping."
         )
 
     message_containers = driver.find_elements(
@@ -93,9 +110,27 @@ def parse_wa_timestamp(timestamp_str):
     return datetime.strptime(timestamp_str, "%I:%M %p, %d/%m/%Y")
 
 
+def build_seen_from_sheet(worksheet):
+    records = worksheet.get_all_values()
+    seen = set()
+    for row in records[1:]:
+        if len(row) >= 2:
+            timestamp, sender = row[0], row[1]
+            seen.add((sender, timestamp))
+    return seen
+
+
 def polling_loop(driver, worksheet, config, logger):
-    seen_messages = load_state(config["state_file"])
-    logger.info(f"Loaded {len(seen_messages)} previously logged messages.")
+    disk_state = load_state(config["state_file"])
+    sheet_state = build_seen_from_sheet(worksheet)
+
+    seen_messages = disk_state | sheet_state
+    logger.info(
+        f"Reconciled state: {len(disk_state)} from disk, "
+        f"{len(sheet_state)} from sheet, {len(seen_messages)} total."
+    )
+
+    save_state(config["state_file"], seen_messages)
     logger.info("Now watching for purchases (including existing history)...")
 
     while True:
@@ -103,7 +138,7 @@ def polling_loop(driver, worksheet, config, logger):
             messages = read_messages(driver, config["group_name"])
 
             for m in messages:
-                message_id = (m["sender"], m["timestamp"], m["text"])
+                message_id = (m["sender"], m["timestamp"])
                 if message_id in seen_messages:
                     continue
 
