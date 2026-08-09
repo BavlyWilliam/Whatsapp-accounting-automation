@@ -34,7 +34,8 @@ def _write_row(worksheet, message, result, source):
         result["amount"],
         result["vendor"],
         result["project"],
-        source
+        source,
+        message["text"]
     ]
     worksheet.append_row(row)
     print(f"Added to sheet ({source}): {row}")

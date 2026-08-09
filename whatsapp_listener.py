@@ -133,9 +133,9 @@ def build_seen_from_sheet(worksheet):
     records = worksheet.get_all_values()
     seen = set()
     for row in records[1:]:
-        if len(row) >= 2:
-            timestamp, sender = row[0], row[1]
-            seen.add((sender, timestamp))
+        if len(row) >= 9:
+            timestamp, sender, raw_text = row[0], row[1], row[8]
+            seen.add((sender, timestamp, raw_text))
     return seen
 
 
@@ -154,7 +154,7 @@ def polling_loop(driver, worksheet, config, logger):
             messages = read_messages(driver, config["group_name"])
 
             for m in messages:
-                message_id = (m["sender"], m["timestamp"])
+                message_id = (m["sender"], m["timestamp"], m["text"])
                 if message_id in seen_messages:
                     continue
 
