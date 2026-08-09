@@ -61,6 +61,26 @@ def open_group(driver, group_name):
         )
 
 
+def scroll_to_top(driver, max_scrolls=30):
+    try:
+        chat_panel = driver.find_element(
+            By.CSS_SELECTOR, "div[data-testid='conversation-panel-messages']"
+        )
+    except NoSuchElementException:
+        return
+
+    last_count = 0
+    for _ in range(max_scrolls):
+        driver.execute_script("arguments[0].scrollTop = 0", chat_panel)
+        time.sleep(0.5)
+        current_count = len(driver.find_elements(
+            By.CSS_SELECTOR, "div.copyable-text[data-pre-plain-text]"
+        ))
+        if current_count == last_count:
+            break
+        last_count = current_count
+
+
 def read_messages(driver, group_name):
     try:
         header_title = driver.find_element(
@@ -120,6 +140,9 @@ def build_seen_from_sheet(worksheet):
 
 
 def polling_loop(driver, worksheet, config, logger):
+    logger.info("Loading available chat history...")
+    scroll_to_top(driver)
+
     seen_messages = build_seen_from_sheet(worksheet)
     logger.info(
         f"Reconciled {len(seen_messages)} existing entries from the sheet."
