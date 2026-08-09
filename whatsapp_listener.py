@@ -1,6 +1,8 @@
 from selenium import webdriver
 from selenium.webdriver.firefox.service import Service
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.firefox import GeckoDriverManager
 import time
 import os
@@ -33,14 +35,33 @@ def start_browser(profile_folder):
 
 
 def open_group(driver, group_name):
-    time.sleep(10)
-    chat_entry = driver.find_element(
-        By.XPATH, f'//span[@title="{group_name}"]')
+    wait = WebDriverWait(driver, 30)
+
+    chat_entry = wait.until(
+        EC.element_to_be_clickable((By.XPATH, f'//span[@title="{group_name}"]'))
+    )
     chat_entry.click()
-    time.sleep(2)
+
+    header = wait.until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, "header"))
+    )
+    time.sleep(1)
+
+    if group_name not in header.text:
+        raise RuntimeError(
+            f"SAFETY CHECK FAILED: Expected to open '{group_name}' but "
+            f"header shows: '{header.text}'. Aborting."
+        )
 
 
-def read_messages(driver):
+def read_messages(driver, group_name):
+    header = driver.find_element(By.CSS_SELECTOR, "header")
+    if group_name not in header.text:
+        raise RuntimeError(
+            f"SAFETY CHECK FAILED during polling: expected '{group_name}', "
+            f"header shows '{header.text}'. Stopping."
+        )
+
     message_containers = driver.find_elements(
         By.CSS_SELECTOR, "div.copyable-text[data-pre-plain-text]")
 
@@ -79,7 +100,7 @@ def polling_loop(driver, worksheet, config, logger):
 
     while True:
         try:
-            messages = read_messages(driver)
+            messages = read_messages(driver, config["group_name"])
 
             for m in messages:
                 message_id = (m["sender"], m["timestamp"], m["text"])
@@ -97,6 +118,9 @@ def polling_loop(driver, worksheet, config, logger):
 
                 save_state(config["state_file"], seen_messages)
 
+        except RuntimeError as e:
+            logger.critical(str(e))
+            raise
         except Exception as e:
             logger.error(f"Polling loop error: {e}")
 
