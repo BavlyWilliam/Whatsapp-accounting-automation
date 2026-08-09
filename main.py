@@ -33,6 +33,7 @@ def _write_row(worksheet, message, result, source):
         result["quantity"],
         result["amount"],
         result["vendor"],
+        result["project"],
         source
     ]
     worksheet.append_row(row)

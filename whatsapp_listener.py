@@ -13,7 +13,6 @@ from datetime import datetime
 from main import process_message
 from Sheets_connector import get_sheet
 from config_loader import load_config
-from state_manager import load_state, save_state
 from logger import setup_logger
 
 
@@ -121,17 +120,11 @@ def build_seen_from_sheet(worksheet):
 
 
 def polling_loop(driver, worksheet, config, logger):
-    disk_state = load_state(config["state_file"])
-    sheet_state = build_seen_from_sheet(worksheet)
-
-    seen_messages = disk_state | sheet_state
+    seen_messages = build_seen_from_sheet(worksheet)
     logger.info(
-        f"Reconciled state: {len(disk_state)} from disk, "
-        f"{len(sheet_state)} from sheet, {len(seen_messages)} total."
+        f"Reconciled {len(seen_messages)} existing entries from the sheet."
     )
-
-    save_state(config["state_file"], seen_messages)
-    logger.info("Now watching for purchases (including existing history)...")
+    logger.info("Now watching for purchases (including full history reconciliation)...")
 
     while True:
         try:
@@ -150,8 +143,6 @@ def polling_loop(driver, worksheet, config, logger):
                 except Exception as e:
                     logger.error(
                         f"Failed to process message from {m['sender']}: {e}")
-
-                save_state(config["state_file"], seen_messages)
 
         except RuntimeError as e:
             logger.critical(str(e))
