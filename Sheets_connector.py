@@ -1,10 +1,10 @@
 import gspread
 
 
-def get_sheet(sheet_name, worksheet_name):
+def get_sheet(sheet_name, worksheet_name, token_file):
     gc = gspread.oauth(
         credentials_filename="credentials.json",
-        authorized_user_filename="token.json"
+        authorized_user_filename=token_file
     )
     spreadsheet = gc.open(sheet_name)
     worksheet = spreadsheet.worksheet(worksheet_name)

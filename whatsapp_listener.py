@@ -8,6 +8,7 @@ from webdriver_manager.firefox import GeckoDriverManager
 import time
 import os
 import re
+import json
 from datetime import datetime
 
 from main import process_message
@@ -38,7 +39,8 @@ def open_group(driver, group_name):
     wait = WebDriverWait(driver, 30)
 
     chat_entry = wait.until(
-        EC.element_to_be_clickable((By.XPATH, f'//span[@title="{group_name}"]'))
+        EC.element_to_be_clickable(
+            (By.XPATH, f'//span[@title="{group_name}"]'))
     )
     chat_entry.click()
 
@@ -147,7 +149,8 @@ def polling_loop(driver, worksheet, config, logger):
     logger.info(
         f"Reconciled {len(seen_messages)} existing entries from the sheet."
     )
-    logger.info("Now watching for purchases (including full history reconciliation)...")
+    logger.info(
+        "Now watching for purchases (including full history reconciliation)...")
 
     while True:
         try:
@@ -176,13 +179,58 @@ def polling_loop(driver, worksheet, config, logger):
         time.sleep(5)
 
 
+def load_clients(path="clients.json"):
+    with open(path, "r") as f:
+        return json.load(f)
+
+
 if __name__ == "__main__":
-    config = load_config()
-    logger = setup_logger(config["log_file"])
+    clients = load_clients()
+    logger = setup_logger("./logs/main.log")
 
-    logger.info(f"Starting automation for client: {config['client_name']}")
+    driver = start_browser("./firefox_profile_shared")
 
-    driver = start_browser(config["profile_folder"])
-    open_group(driver, config["group_name"])
-    worksheet = get_sheet(config["sheet_name"], config["worksheet_name"])
-    polling_loop(driver, worksheet, config, logger)
+    client_sheets = {}
+    client_seen = {}
+
+    for client in clients:
+        cid = client["client_id"]
+        worksheet = get_sheet(
+            client["sheet_name"],
+            client["worksheet_name"],
+            client["token_file"]
+        )
+        client_sheets[cid] = worksheet
+        client_seen[cid] = build_seen_from_sheet(worksheet)
+        logger.info(
+            f"[{cid}] Loaded {len(client_seen[cid])} existing entries from sheet."
+        )
+
+    logger.info("Starting multi-client polling loop...")
+
+    while True:
+        for client in clients:
+            cid = client["client_id"]
+            try:
+                open_group(driver, client["group_name"])
+                messages = read_messages(driver, client["group_name"])
+
+                for m in messages:
+                    message_id = (m["sender"], m["timestamp"], m["text"])
+                    if message_id in client_seen[cid]:
+                        continue
+
+                    client_seen[cid].add(message_id)
+                    try:
+                        process_message(m, client_sheets[cid])
+                        logger.info(
+                            f"[{cid}] Processed message from {m['sender']} at {m['timestamp']}"
+                        )
+                    except Exception as e:
+                        logger.error(f"[{cid}] Failed to process message: {e}")
+
+            except Exception as e:
+                logger.error(
+                    f"[{cid}] Error while polling this client's group: {e}")
+
+        time.sleep(5)
