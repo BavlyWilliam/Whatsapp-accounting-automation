@@ -28,12 +28,14 @@ def validate(data):
 
     vendor = str(data.get("vendor", "")).strip()
     project = str(data.get("project", "")).strip()
+    currency = str(data.get("currency", "")).strip()
 
     clean_data = {
         "item": item,
         "quantity": quantity,
         "amount": amount,
         "vendor": vendor,
-        "project": project
+        "project": project,
+        "currency": currency
     }
     return True, clean_data

@@ -222,7 +222,12 @@ if __name__ == "__main__":
 
                     client_seen[cid].add(message_id)
                     try:
-                        process_message(m, client_sheets[cid])
+                        process_message(
+                            m,
+                            client_sheets[cid],
+                            default_currency=client.get(
+                                "default_currency", "EGP")
+                        )
                         logger.info(
                             f"[{cid}] Processed message from {m['sender']} at {m['timestamp']}"
                         )

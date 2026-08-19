@@ -1,7 +1,7 @@
 [
     {
         "client_id": "client_001",
-        "group_name": "Business Purchases - Client001",
+        "group_name": "Business purchase",
         "sheet_name": "Business Purchases Log",
         "worksheet_name": "Raw Data",
         "token_file": "./tokens/token_client_001.json",
