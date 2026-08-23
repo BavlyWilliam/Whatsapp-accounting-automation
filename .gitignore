@@ -11,6 +11,7 @@ __pycache__/
 
 # Browser profiles
 firefox_profile/
+firefox_profile_shared/
 firefox_profile_test/
 firefox_profile_test_business/
 
@@ -26,3 +27,5 @@ token.json
 
 # Runtime message state
 state_test_business.json
+# Node.js
+node_modules/
