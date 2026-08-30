@@ -14,3 +14,8 @@ process_message({"sender": "Test User", "timestamp": "1:01 pm, 01/08/2026",
                 "text": "الصنف: كابل\nالكمية: 3\nالسعر: 90"}, fake_sheet)
 process_message({"sender": "Test User", "timestamp": "1:02 pm, 01/08/2026",
                 "text": "bought 2 items of paper for 450 from Office World"}, fake_sheet)
+process_message({
+    "sender": "Test User",
+    "timestamp": "1:03 pm, 01/08/2026",
+    "text": "Purchase Item: hostinger domain, US$ Quantity: 1 Amount: 30"
+}, fake_sheet)
