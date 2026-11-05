@@ -1,31 +1,49 @@
-# Environment
+# Environment and local secrets
 .env
+.env.*
+!.env.example
 
-# Python virtual environment
+# Python environments and generated files
 .venv/
 venv/
-
-# Python cache
+env/
 __pycache__/
-*.pyc
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+build/
+dist/
+.coverage
+htmlcov/
 
-# Browser profiles
-firefox_profile/
-firefox_profile_shared/
-firefox_profile_test/
-firefox_profile_test_business/
+# Browser profiles and session data
+**/firefox_profile*/
+state*.json
 
-# Secrets
-Credentials.json
-token.json
+# Credentials and private keys
+tokens/*.json
+**/*token*.json
+**/*credentials*.json
+**/client_secret*.json
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Local databases
+*.db
+*.sqlite
+*.sqlite3
 
 # Logs
+logs/
 *.log
 
-# VS Code settings
+# Local editor, OS, and dependency files
 .vscode/
-
-# Runtime message state
-state_test_business.json
-# Node.js
 node_modules/
+.idea/
+.DS_Store
+Thumbs.db
